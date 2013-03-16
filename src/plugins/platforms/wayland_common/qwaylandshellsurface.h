@@ -79,6 +79,7 @@ private:
     struct wl_shell_surface *m_shell_surface;
     QWaylandWindow *m_window;
     bool m_maximized;
+    bool m_minimized;
     bool m_fullscreen;
     QSize m_size;
 
@@ -92,6 +93,11 @@ private:
               int32_t height);
     static void popup_done(void *data,
                 struct wl_shell_surface *wl_shell_surface);
+    static void maximize(void *data, struct wl_shell_surface *wl_shell_surface);
+    static void unmaximize(void *data, struct wl_shell_surface *wl_shell_surface);
+    static void minimize(void *data, struct wl_shell_surface *wl_shell_surface);
+    static void unminimize(void *data, struct wl_shell_surface *wl_shell_surface);
+    static void close(void *data, struct wl_shell_surface *wl_shell_surface);
     static const struct wl_shell_surface_listener m_shell_surface_listener;
 
     friend class QWaylandWindow;

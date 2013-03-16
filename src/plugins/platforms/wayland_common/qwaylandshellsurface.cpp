@@ -55,6 +55,7 @@ QWaylandShellSurface::QWaylandShellSurface(struct wl_shell_surface *shell_surfac
     : m_shell_surface(shell_surface)
     , m_window(window)
     , m_maximized(false)
+    , m_minimized(false)
     , m_fullscreen(false)
 {
     wl_shell_surface_add_listener(m_shell_surface,&m_shell_surface_listener,this);
@@ -95,8 +96,8 @@ void QWaylandShellSurface::setFullscreen()
 
 void QWaylandShellSurface::setNormal()
 {
-    if (m_fullscreen || m_maximized) {
-        m_fullscreen = m_maximized = false;
+    if (m_fullscreen || m_maximized || m_minimized) {
+        m_fullscreen = m_maximized = m_minimized = false;
         setTopLevel();
         QMargins m = m_window->frameMargins();
         m_window->configure(0, m_size.width() + m.left() + m.right(), m_size.height() + m.top() + m.bottom());
@@ -105,7 +106,9 @@ void QWaylandShellSurface::setNormal()
 
 void QWaylandShellSurface::setMinimized()
 {
-    // TODO: There's no wl_shell_surface API for this
+    m_minimized = true;
+    m_size = m_window->window()->geometry().size();
+    wl_shell_surface_set_minimized(m_shell_surface);
 }
 
 void QWaylandShellSurface::setTopLevel()
@@ -151,6 +154,8 @@ void QWaylandShellSurface::setTitle(const char *title)
     wl_shell_surface_set_title(m_shell_surface, title);
 }
 
+#define _surf static_cast<QWaylandShellSurface *>(data)
+
 void QWaylandShellSurface::ping(void *data,
                                 struct wl_shell_surface *wl_shell_surface,
                                 uint32_t serial)
@@ -177,8 +182,43 @@ void QWaylandShellSurface::popup_done(void *data,
     Q_UNUSED(wl_shell_surface);
 }
 
+void QWaylandShellSurface::maximize(void *data, struct wl_shell_surface *wl_shell_surface)
+{
+    Q_UNUSED(wl_shell_surface);
+    _surf->m_window->window()->setWindowState(Qt::WindowMaximized);
+}
+
+void QWaylandShellSurface::unmaximize(void *data, struct wl_shell_surface *wl_shell_surface)
+{
+    Q_UNUSED(wl_shell_surface);
+    _surf->m_window->window()->setWindowState(Qt::WindowNoState);
+}
+
+void QWaylandShellSurface::minimize(void *data, struct wl_shell_surface *wl_shell_surface)
+{
+    Q_UNUSED(wl_shell_surface);
+    _surf->m_window->window()->setWindowState(Qt::WindowMinimized);
+}
+
+void QWaylandShellSurface::unminimize(void *data, struct wl_shell_surface *wl_shell_surface)
+{
+    Q_UNUSED(wl_shell_surface);
+    _surf->m_window->window()->setWindowState(Qt::WindowNoState);
+}
+
+void QWaylandShellSurface::close(void *data, struct wl_shell_surface *wl_shell_surface)
+{
+    Q_UNUSED(wl_shell_surface);
+    QCoreApplication::postEvent(_surf->m_window->window(), new QCloseEvent());
+}
+
 const wl_shell_surface_listener QWaylandShellSurface::m_shell_surface_listener = {
     QWaylandShellSurface::ping,
     QWaylandShellSurface::configure,
-    QWaylandShellSurface::popup_done
+    QWaylandShellSurface::popup_done,
+    QWaylandShellSurface::maximize,
+    QWaylandShellSurface::unmaximize,
+    QWaylandShellSurface::minimize,
+    QWaylandShellSurface::unminimize,
+    QWaylandShellSurface::close
 };
