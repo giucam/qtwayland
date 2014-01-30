@@ -1,3 +1,6 @@
+
+cache(BUILD_MODULES, set)
+
 load(configure)
 qtCompileTest(wayland)
 qtCompileTest(xkbcommon)

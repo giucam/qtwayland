@@ -1,11 +1,17 @@
+include(../modules.pri)
+
 TEMPLATE=subdirs
 CONFIG+=ordered
 
-SUBDIRS += qtwaylandscanner
+build_qtwaylandscanner: \
+    SUBDIRS += qtwaylandscanner
 
 #Don't build QtCompositor API unless explicitly enabled
-contains(CONFIG, wayland-compositor) {
+build_wayland_compositor {
     SUBDIRS += compositor
 }
 
-SUBDIRS += client plugins
+build_wayland_client: \
+    SUBDIRS += client
+
+SUBDIRS += plugins
