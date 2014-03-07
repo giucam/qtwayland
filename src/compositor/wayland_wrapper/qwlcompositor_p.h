@@ -44,6 +44,7 @@
 #include <QtCompositor/qwaylandexport.h>
 #include <QtCompositor/qwaylandcompositor.h>
 
+#include <QtCompositor/private/qwayland-server-wayland.h>
 
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QSet>
@@ -81,7 +82,7 @@ class HardwareIntegration;
 class ClientBufferIntegration;
 class ServerBufferIntegration;
 
-class Q_COMPOSITOR_EXPORT Compositor : public QObject
+class Q_COMPOSITOR_EXPORT Compositor : public QObject, public QtWaylandServer::wl_compositor
 {
     Q_OBJECT
 
@@ -93,7 +94,6 @@ public:
 
     InputDevice *defaultInputDevice(); //we just have 1 default device for now (since QPA doesn't give us anything else)
 
-    void createSurface(struct wl_client *client, uint32_t id);
     void destroySurface(Surface *surface);
 
     void destroyClient(WaylandClient *client);
@@ -160,6 +160,9 @@ public:
 public slots:
     void cleanupGraphicsResources();
 
+protected:
+    void compositor_create_surface(Resource *resource, uint32_t id) Q_DECL_OVERRIDE;
+    void compositor_create_region(Resource *resource, uint32_t id) Q_DECL_OVERRIDE;
 private slots:
     void processWaylandEvents();
 
