@@ -73,6 +73,9 @@ Keyboard::Keyboard(Compositor *compositor, InputDevice *seat)
 #ifndef QT_NO_WAYLAND_XKB
     initXKB();
 #endif
+    m_focusDestroyListener.parent = this;
+    m_focusDestroyListener.listener.notify = focusDestroyed;
+    wl_list_init(&m_focusDestroyListener.listener.link);
 }
 
 Keyboard::~Keyboard()
@@ -91,6 +94,8 @@ void Keyboard::setFocus(Surface *surface)
     if (m_focusResource && m_focus != surface) {
         uint32_t serial = wl_display_next_serial(m_compositor->wl_display());
         send_leave(m_focusResource->handle, serial, m_focus->resource()->handle);
+        wl_list_remove(&m_focusDestroyListener.listener.link);
+        wl_list_init(&m_focusDestroyListener.listener.link);
     }
 
     Resource *resource = surface ? resourceMap().value(surface->resource()->client()) : 0;
@@ -99,6 +104,7 @@ void Keyboard::setFocus(Surface *surface)
         uint32_t serial = wl_display_next_serial(m_compositor->wl_display());
         send_modifiers(resource->handle, serial, m_modsDepressed, m_modsLatched, m_modsLocked, m_group);
         send_enter(resource->handle, serial, surface->resource()->handle, QByteArray::fromRawData((char *)m_keys.data(), m_keys.size() * sizeof(uint32_t)));
+        wl_signal_add(&surface->resource()->handle->destroy_signal, &m_focusDestroyListener.listener);
     }
 
     m_focusResource = resource;
@@ -110,6 +116,17 @@ void Keyboard::setKeymap(const QWaylandKeymap &keymap)
 {
     m_keymap = keymap;
     m_pendingKeymap = true;
+}
+
+void Keyboard::focusDestroyed(wl_listener *listener, void *data)
+{
+    Q_UNUSED(data)
+    Keyboard *keyb = reinterpret_cast<Listener *>(listener)->parent;
+    wl_list_remove(&keyb->m_focusDestroyListener.listener.link);
+    wl_list_init(&keyb->m_focusDestroyListener.listener.link);
+
+    keyb->m_focus = 0;
+    keyb->m_focusResource = 0;
 }
 
 void Keyboard::sendKeyModifiers(wl_keyboard::Resource *resource, uint32_t serial)

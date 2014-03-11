@@ -91,6 +91,7 @@ private:
     void sendKeyEvent(uint code, uint32_t state);
     void updateModifierState(uint code, uint32_t state);
     void updateKeymap();
+    static void focusDestroyed(wl_listener *listener, void *data);
 
 #ifndef QT_NO_WAYLAND_XKB
     void initXKB();
@@ -102,6 +103,12 @@ private:
 
     Surface *m_focus;
     Resource *m_focusResource;
+    struct Listener
+    {
+        wl_listener listener;
+        Keyboard *parent;
+    };
+    Listener m_focusDestroyListener;
 
     QVector<uint32_t> m_keys;
     uint32_t m_modsDepressed;

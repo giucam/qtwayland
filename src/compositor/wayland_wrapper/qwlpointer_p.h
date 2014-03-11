@@ -53,6 +53,8 @@
 
 QT_BEGIN_NAMESPACE
 
+struct wl_listener;
+
 namespace QtWayland {
 
 class Compositor;
@@ -112,6 +114,8 @@ protected:
     void pointer_destroy_resource(Resource *resource) Q_DECL_OVERRIDE;
 
 private:
+    static void focusDestroyed(wl_listener *listener, void *data);
+
     Compositor *m_compositor;
     InputDevice *m_seat;
 
@@ -129,6 +133,13 @@ private:
     QPointF m_currentPoint;
 
     int m_buttonCount;
+
+    struct Listener
+    {
+        wl_listener listener;
+        Pointer *parent;
+    };
+    Listener m_focusDestroyListener;
 };
 
 } // namespace QtWayland
