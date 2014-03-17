@@ -100,8 +100,6 @@ void SurfaceBuffer::initialize(struct ::wl_resource *buffer)
 
 void SurfaceBuffer::destructBufferState()
 {
-    destroyTexture();
-
     if (m_buffer) {
         sendRelease();
 
@@ -239,11 +237,6 @@ QImage SurfaceBuffer::image()
     return m_image;
 }
 
-void SurfaceBuffer::bufferWasDestroyed()
-{
-    destroyTexture();
-}
-
 void SurfaceBuffer::destroy_listener_callback(wl_listener *listener, void *data)
 {
     Q_UNUSED(data);
@@ -253,16 +246,14 @@ void SurfaceBuffer::destroy_listener_callback(wl_listener *listener, void *data)
 
     // Mark the buffer as destroyed and clear m_buffer right away to avoid
     // touching it before it is properly cleaned up.
-    // Then, if it has a texture, schedule the texture to be released on the
-    // render thread later on.
     d->m_destroyed = true;
     d->m_buffer = 0;
-    if (d->m_texture)
-        d->m_compositor->bufferWasDestroyed(d);
 }
 
 void SurfaceBuffer::createTexture()
 {
+    destroyTexture();
+
     ClientBufferIntegration *hwIntegration = m_compositor->clientBufferIntegration();
 #ifdef QT_COMPOSITOR_WAYLAND_GL
     if (!m_texture)
@@ -275,6 +266,22 @@ void SurfaceBuffer::createTexture()
     Q_UNUSED(hwIntegration);
     Q_UNUSED(context);
 #endif
+}
+
+bool SurfaceBuffer::isYInverted() const
+{
+    bool ret = false;
+    static bool negateReturn = qgetenv("QT_COMPOSITOR_NEGATE_INVERTED_Y").toInt();
+    ClientBufferIntegration *clientBufferIntegration = m_compositor->clientBufferIntegration();
+
+#ifdef QT_COMPOSITOR_WAYLAND_GL
+    if (clientBufferIntegration && waylandBufferHandle() && isShmBuffer()) {
+        ret = clientBufferIntegration->isYInverted(waylandBufferHandle());
+    } else
+#endif
+        ret = true;
+
+    return ret != negateReturn;
 }
 
 }
