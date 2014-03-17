@@ -421,6 +421,7 @@ SurfaceBuffer *Surface::createSurfaceBuffer(struct ::wl_resource *buffer)
 void Surface::surface_destroy_resource(Resource *)
 {
     compositor()->destroySurface(this);
+    m_destroyed = true;
 }
 
 void Surface::surface_destroy(Resource *resource)

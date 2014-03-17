@@ -144,6 +144,8 @@ public:
     void releaseSurfaces();
     void frameStarted();
 
+    inline bool isDestroyed() const { return m_destroyed; }
+
 private:
     Q_DISABLE_COPY(Surface)
 
@@ -184,6 +186,7 @@ private:
     QString m_title;
     bool m_transientInactive;
     bool m_isCursorSurface;
+    bool m_destroyed;
 
     inline SurfaceBuffer *currentSurfaceBuffer() const;
     void setBackBuffer(SurfaceBuffer *buffer);
