@@ -53,6 +53,7 @@ QT_BEGIN_NAMESPACE
 
 QWaylandWlShellSurface::QWaylandWlShellSurface(struct ::wl_shell_surface *shell_surface, QWaylandWindow *window)
     : QtWayland::wl_shell_surface(shell_surface)
+    , QWaylandShellSurface(window)
     , m_window(window)
     , m_maximized(false)
     , m_fullscreen(false)

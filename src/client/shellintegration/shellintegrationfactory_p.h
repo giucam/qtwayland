@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the config.tests of the Qt Toolkit.
+** This file is part of the QtGui module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,17 +39,23 @@
 **
 ****************************************************************************/
 
-#include "qwaylandshellsurface_p.h"
-#include "qwaylandwindow_p.h"
-#include "qwaylandextendedsurface_p.h"
+#ifndef QWAYLANDSHELLINTEGRATIONFACTORY_H
+#define QWAYLANDSHELLINTEGRATIONFACTORY_H
 
-QWaylandShellSurface::QWaylandShellSurface(QWaylandWindow *window)
-                    : m_window(window)
-{
-}
+#include <QtWaylandClient/private/qwaylandclientexport_p.h>
+#include <QtCore/QStringList>
 
-void QWaylandShellSurface::setWindowFlags(Qt::WindowFlags flags)
+QT_BEGIN_NAMESPACE
+
+class QWaylandShellIntegration;
+
+class Q_WAYLAND_CLIENT_EXPORT QWaylandShellIntegrationFactory
 {
-    if (m_window->extendedWindow())
-        m_window->extendedWindow()->setWindowFlags(flags);
-}
+public:
+    static QStringList keys(const QString &pluginPath = QString());
+    static QWaylandShellIntegration *create(const QString &name, const QStringList &args, const QString &pluginPath = QString());
+};
+
+QT_END_NAMESPACE
+
+#endif // QWAYLANDSHELLINTEGRATIONFACTORY_H

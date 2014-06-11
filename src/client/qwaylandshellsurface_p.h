@@ -58,6 +58,7 @@ class QWindow;
 class Q_WAYLAND_CLIENT_EXPORT QWaylandShellSurface
 {
 public:
+    explicit QWaylandShellSurface(QWaylandWindow *window);
     virtual ~QWaylandShellSurface() {}
     virtual void resize(QWaylandInputDevice * /*inputDevice*/, enum wl_shell_surface_resize /*edges*/)
     {}
@@ -66,7 +67,11 @@ public:
     virtual void setTitle(const QString & /*title*/) {}
     virtual void setAppId(const QString & /*appId*/) {}
 
-private:
+    virtual void setWindowFlags(Qt::WindowFlags flags);
+
+    virtual bool isExposed() const { return true; }
+
+protected:
     virtual void setMaximized() {}
     virtual void setFullscreen() {}
     virtual void setNormal() {}
@@ -74,6 +79,11 @@ private:
 
     virtual void setTopLevel() {}
     virtual void updateTransientParent(QWindow * /*parent*/) {}
+
+    inline QWaylandWindow *window() { return m_window; }
+
+private:
+    QWaylandWindow *m_window;
     friend class QWaylandWindow;
 };
 

@@ -95,13 +95,7 @@ QWaylandWindow::QWaylandWindow(QWindow *window)
     mWindowId = id++;
 
     if (!(window->flags() & Qt::BypassWindowManagerHint)) {
-        if (mDisplay->shellXdg()) {
-           if (window->type() & Qt::Window) {
-                mShellSurface = new QWaylandXdgSurface(mDisplay->shellXdg()->get_xdg_surface(object()), this);
-            }
-        } else if (mDisplay->shell() && window->type() & Qt::Window) {
-            mShellSurface = new QWaylandWlShellSurface(mDisplay->shell()->get_shell_surface(object()), this);
-        }
+        mShellSurface = mDisplay->createShellSurface(this);
     }
 
     if (mDisplay->windowExtension())
@@ -219,10 +213,9 @@ void QWaylandWindow::setGeometry(const QRect &rect)
         else
             QWindowSystemInterface::handleGeometryChange(window(), geometry());
 
-        QWindowSystemInterface::handleExposeEvent(window(), QRect(QPoint(), geometry().size()));
-
         mSentInitialResize = true;
     }
+    QWindowSystemInterface::handleExposeEvent(window(), QRect(QPoint(), geometry().size()));
 }
 
 void QWaylandWindow::setVisible(bool visible)
@@ -440,8 +433,8 @@ void QWaylandWindow::setWindowState(Qt::WindowState state)
 
 void QWaylandWindow::setWindowFlags(Qt::WindowFlags flags)
 {
-    if (mExtendedWindow)
-        mExtendedWindow->setWindowFlags(flags);
+    if (mShellSurface)
+        mShellSurface->setWindowFlags(flags);
 }
 
 bool QWaylandWindow::createDecoration()
@@ -608,6 +601,13 @@ void QWaylandWindow::requestActivateWindow()
 {
     // no-op. Wayland does not have activation protocol,
     // we rely on compositor setting keyboard focus based on window stacking.
+}
+
+bool QWaylandWindow::isExposed() const
+{
+    if (mShellSurface)
+        return window()->isVisible() && mShellSurface->isExposed();
+    return QPlatformWindow::isExposed();
 }
 
 bool QWaylandWindow::setMouseGrabEnabled(bool grab)

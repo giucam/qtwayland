@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the config.tests of the Qt Toolkit.
+** This file is part of the QtGui module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,17 +39,31 @@
 **
 ****************************************************************************/
 
-#include "qwaylandshellsurface_p.h"
-#include "qwaylandwindow_p.h"
-#include "qwaylandextendedsurface_p.h"
+#ifndef QWAYLANDSHELLINTEGRATIONPLUGIN_H
+#define QWAYLANDSHELLINTEGRATIONPLUGIN_H
 
-QWaylandShellSurface::QWaylandShellSurface(QWaylandWindow *window)
-                    : m_window(window)
-{
-}
+#include <QtWaylandClient/private/qwaylandclientexport_p.h>
 
-void QWaylandShellSurface::setWindowFlags(Qt::WindowFlags flags)
+#include <QtCore/qplugin.h>
+#include <QtCore/qfactoryinterface.h>
+#include <QtCore/QObject>
+
+QT_BEGIN_NAMESPACE
+
+class QWaylandShellIntegration;
+
+#define QWaylandShellIntegrationFactoryInterface_iid "org.qt-project.Qt.WaylandClient.QWaylandShellIntegrationFactoryInterface.5.3"
+
+class Q_WAYLAND_CLIENT_EXPORT QWaylandShellIntegrationPlugin : public QObject
 {
-    if (m_window->extendedWindow())
-        m_window->extendedWindow()->setWindowFlags(flags);
-}
+    Q_OBJECT
+public:
+    explicit QWaylandShellIntegrationPlugin(QObject *parent = 0);
+    ~QWaylandShellIntegrationPlugin();
+
+    virtual QWaylandShellIntegration *create(const QString &key, const QStringList &paramList) = 0;
+};
+
+QT_END_NAMESPACE
+
+#endif // QWAYLANDSHELLINTEGRATIONPLUGIN_H

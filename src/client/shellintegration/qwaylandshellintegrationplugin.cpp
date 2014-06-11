@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the config.tests of the Qt Toolkit.
+** This file is part of the QtGui module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,17 +39,17 @@
 **
 ****************************************************************************/
 
-#include "qwaylandshellsurface_p.h"
-#include "qwaylandwindow_p.h"
-#include "qwaylandextendedsurface_p.h"
+#include "qwaylandshellintegrationplugin_p.h"
 
-QWaylandShellSurface::QWaylandShellSurface(QWaylandWindow *window)
-                    : m_window(window)
+QT_BEGIN_NAMESPACE
+
+QWaylandShellIntegrationPlugin::QWaylandShellIntegrationPlugin(QObject *parent)
+                              : QObject(parent)
 {
 }
 
-void QWaylandShellSurface::setWindowFlags(Qt::WindowFlags flags)
+QWaylandShellIntegrationPlugin::~QWaylandShellIntegrationPlugin()
 {
-    if (m_window->extendedWindow())
-        m_window->extendedWindow()->setWindowFlags(flags);
 }
+
+QT_END_NAMESPACE
