@@ -69,6 +69,7 @@ SOURCES +=  qwaylandintegration.cpp \
             qwaylandtouch.cpp \
             qwaylandqtkey.cpp \
             ../shared/qwaylandmimehelper.cpp \
+            ../shared/qwaylandxkb.cpp \
             qwaylandabstractdecoration.cpp \
             qwaylanddecorationfactory.cpp \
             qwaylanddecorationplugin.cpp \
@@ -102,6 +103,7 @@ HEADERS +=  qwaylandintegration_p.h \
             qwaylandtouch_p.h \
             qwaylandqtkey_p.h \
             ../shared/qwaylandmimehelper.h \
+            ../shared/qwaylandxkb.h \
             qwaylandabstractdecoration_p.h \
             qwaylanddecorationfactory_p.h \
             qwaylanddecorationplugin_p.h \

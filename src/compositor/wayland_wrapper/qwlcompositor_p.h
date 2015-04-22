@@ -62,6 +62,7 @@ class WindowManagerServerIntegration;
 class QMimeData;
 class QPlatformScreenBuffer;
 class QWaylandSurface;
+class QAbstractWindowSystemEventFilter;
 
 namespace QtWayland {
 
@@ -211,6 +212,7 @@ protected:
     QScopedPointer<TextInputManager> m_textInputManager;
     QScopedPointer<InputPanel> m_inputPanel;
     QList<QWaylandGlobalInterface *> m_globals;
+    QScopedPointer<QAbstractWindowSystemEventFilter> m_eventsFilter;
 
     static void bind_func(struct wl_client *client, void *data,
                           uint32_t version, uint32_t id);

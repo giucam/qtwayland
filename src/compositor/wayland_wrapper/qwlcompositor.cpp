@@ -60,6 +60,7 @@
 #include "qwltextinputmanager_p.h"
 #include "qwaylandglobalinterface.h"
 #include "qwaylandsurfaceview.h"
+#include "qwlkeyboard_p.h"
 
 #include <QWindow>
 #include <QSocketNotifier>
@@ -93,11 +94,65 @@
 #include "hardware_integration/qwlclientbufferintegrationfactory_p.h"
 #include "hardware_integration/qwlserverbufferintegrationfactory_p.h"
 
+#include "../shared/qwaylandxkb.h"
+
 QT_BEGIN_NAMESPACE
 
 namespace QtWayland {
 
 static Compositor *compositor;
+
+class WindowSystemEventFilter : public QAbstractWindowSystemEventFilter
+{
+public:
+    WindowSystemEventFilter(Compositor *c) : compositor(c) {}
+    bool eventFilter(QWindowSystemInterfacePrivate::WindowSystemEvent *e) Q_DECL_OVERRIDE
+    {
+        if (e->type == QWindowSystemInterfacePrivate::Key) {
+            QWindowSystemInterfacePrivate::KeyEvent *ke = static_cast<QWindowSystemInterfacePrivate::KeyEvent *>(e);
+            Keyboard *keyb = compositor->defaultInputDevice()->keyboardDevice();
+
+            uint32_t code = ke->nativeScanCode;
+            bool isDown = ke->keyType == QEvent::KeyPress;
+
+#ifndef QT_NO_WAYLAND_XKB
+            QString text;
+            Qt::KeyboardModifiers modifiers = QWaylandXkb::modifiers(keyb->xkbState());
+
+            const xkb_keysym_t sym = xkb_state_key_get_one_sym(keyb->xkbState(), code);
+            uint utf32 = xkb_keysym_to_utf32(sym);
+            if (utf32)
+                text = QString::fromUcs4(&utf32, 1);
+            int qtkey = QWaylandXkb::keysymToQtKey(sym, modifiers, text);
+
+            ke->key = qtkey;
+            ke->modifiers = modifiers;
+            ke->nativeVirtualKey = sym;
+            ke->nativeModifiers = keyb->xkbModsMask();
+            ke->unicode = text;
+#endif
+            if (!ke->repeat)
+                keyb->keyEvent(code, isDown ? WL_KEYBOARD_KEY_STATE_PRESSED : WL_KEYBOARD_KEY_STATE_RELEASED);
+        }
+        return false;
+    }
+    void eventSent(QWindowSystemInterfacePrivate::WindowSystemEvent *e) Q_DECL_OVERRIDE
+    {
+        if (e->type == QWindowSystemInterfacePrivate::Key) {
+            QWindowSystemInterfacePrivate::KeyEvent *ke = static_cast<QWindowSystemInterfacePrivate::KeyEvent *>(e);
+            Keyboard *keyb = compositor->defaultInputDevice()->keyboardDevice();
+            uint32_t code = ke->nativeScanCode;
+            bool isDown = ke->keyType == QEvent::KeyPress;
+
+            if (!ke->repeat) {
+                keyb->updateKeymap();
+                keyb->updateModifierState(code, isDown ? WL_KEYBOARD_KEY_STATE_PRESSED : WL_KEYBOARD_KEY_STATE_RELEASED);
+            }
+        }
+    }
+
+    Compositor *compositor;
+};
 
 Compositor *Compositor::instance()
 {
@@ -125,10 +180,13 @@ Compositor::Compositor(QWaylandCompositor *qt_compositor, QWaylandCompositor::Ex
     , m_qtkeyExtension(0)
     , m_textInputManager()
     , m_inputPanel()
+    , m_eventsFilter(new WindowSystemEventFilter(this))
     , m_retainSelection(false)
 {
     m_timer.start();
     compositor = this;
+
+    QWindowSystemInterfacePrivate::installWindowSystemEventFilter(m_eventsFilter.data());
 }
 
 void Compositor::init()
